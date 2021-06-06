@@ -22,6 +22,7 @@
         <module>nacos-discovery/provider-payment-9001</module>
         <module>nacos-discovery/consumer-payment-9002</module>
         <module>nacos-config/nacos-config-client-9003</module>
+        <module>nacos-config/nacos-config-namespace-9004</module>
     </modules>
 
     <properties>
