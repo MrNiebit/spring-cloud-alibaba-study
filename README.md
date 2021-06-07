@@ -110,8 +110,16 @@ echo "nacos is starting，you can check the ${BASE_DIR}/logs/start.out"
 启动3个节点
 
 6677：占用端口有：5677、6677、7677、7678 均为TCP协议
+
 6678：占用端口有：5678、6678、7678、7679
+
 6679：占用端口有：5679、6679、7679、7680 `这里7679重复，会导致集群启动错误`
+
+> 因为nacos 2.x 新增了两个端口 用来gRPC通信，这两个端口为 主端口分别加上 1000 和 1001 的和
+>
+> 例如：主端口为 6677，则另外两个端口为：7677、7678
+>
+> jRaft 选举leader 占用端口为：主端口 - 1000 也就是 5677
 
 所以建议集群端口设置为：
 ```shell
@@ -165,3 +173,8 @@ else代码块代表集群，默认的配置为：`-Xms2g -Xmx2g -Xmn1g`
         }
     }
 ```
+
+> **使用VIP/nginx请求时，需要配置成TCP转发，不能配置http2转发，否则连接会被nginx断开。**
+
+请参考官网：[https://nacos.io/zh-cn/docs/2.0.0-compatibility.html](https://nacos.io/zh-cn/docs/2.0.0-compatibility.html)
+
