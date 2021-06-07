@@ -20,7 +20,7 @@ Nacos默认的命名空间是public，Namespace主要用来实现隔离
 
 Group 默认是DEFAULT_GROUP，GROUP可以把不同的微服务划分到同一个分组里面去
 
-## Nacos 持久化配置（MySQL）
+### Nacos 持久化配置（MySQL）
 
 修改文件 `conf/application.properties`
 
@@ -42,13 +42,13 @@ db.password.0=root
 
 最后直接 `./startup.sh -m standalone`
 
-## Nacos 集群搭建
+### Nacos 集群搭建
 
 可以参考 官网 架构图 
 
 至少配置3个节点
 
-### 配置自定义端口启动nacos
+#### 配置自定义端口启动nacos
 
 我们这里修改启动脚本，启动3个端口不一样的节点
 
@@ -88,7 +88,7 @@ echo "nacos is starting，you can check the ${BASE_DIR}/logs/start.out"
 
 能够通过6767端口 访问到naco管理页面 就算成功了。
 
-### 配置集群
+#### 配置集群
 
 使用 `nacos-server-2.0.0.tar.gz`
 
@@ -178,3 +178,93 @@ else代码块代表集群，默认的配置为：`-Xms2g -Xmx2g -Xmn1g`
 
 请参考官网：[https://nacos.io/zh-cn/docs/2.0.0-compatibility.html](https://nacos.io/zh-cn/docs/2.0.0-compatibility.html)
 
+### Nacos 开启shared-configs配置共享，读取多个配置
+
+bootstrap.properties
+
+```properties
+spring.cloud.nacos.config.server-addr=192.168.44.130:8080
+spring.cloud.nacos.config.file-extension=properties
+# 这个是组名
+spring.cloud.nacos.config.group=dev-shared-config
+# 这个是 命名空间id
+spring.cloud.nacos.config.namespace=dev-common
+spring.cloud.nacos.config.shared-configs[0].group=common-group
+spring.cloud.nacos.config.shared-configs[0].data-id=dev-common.properties
+# 是否动态刷新
+spring.cloud.nacos.config.shared-configs[0].refresh=true
+
+# 对于 优先级来说，[1] > [0]
+spring.cloud.nacos.config.shared-configs[1].group=common-group
+spring.cloud.nacos.config.shared-configs[1].data-id=prod-common.properties
+# 是否动态刷新
+spring.cloud.nacos.config.shared-configs[1].refresh=true
+
+```
+
+application.properties
+
+```properties
+spring.application.name=nacos-shared-configs
+server.port=9006
+spring.profiles.active=dev
+
+```
+
+Nacos上操作
+
+1、创建命名空间
+> 命名空间名称:common-namespace 
+> 命名空间ID:dev-common
+
+2、创建公共配置文件 dev-common.properties 和 prod-common.properties
+
+dev-common.properties, 其中dataId: `dev-common.properties`，Group: `common-group`
+```properties
+common.base.ip=192.168.44.130
+common.nacos.port=8848
+common.mysql.port=3306
+mysql.master.username=root
+mysql.master.password=123
+mysql.slaver.username=git
+mysql.slaver.password=213
+```
+
+prod-common.properties， 其中dataId: `prod-common.properties`，Group: `common-group`
+```properties
+common.base.ip=192.168.1.1
+common.nacos.port=1111
+common.mysql.port=2222
+mysql.master.username=root
+mysql.master.password=aaa
+mysql.slaver.username=git
+mysql.slaver.password=bbb
+```
+
+3、创建` nacos-shared-configs-dev.properties` dataId：`nacos-shared-configs-dev.properties` Group：`dev-shared-config`
+
+```properties
+config.url=${common.base.ip}
+config.nacos=${common.nacos.port}
+config.mysql=${common.mysql.port}
+config.masterUsername=${mysql.master.username}
+config.masterPassword=${mysql.master.password}
+config.slaverUsername=${mysql.slaver.username}
+config.slaverPassword=${mysql.slaver.password}
+```
+
+最后调用测试，网页显示
+
+```json
+{
+  "url": "192.168.1.1",
+  "nacos": "1111",
+  "mysql": "2222",
+  "masterUsername": "root",
+  "masterPassword": "aaa",
+  "slaverUsername": "git",
+  "slaverPassword": "bbb"
+}
+```
+
+优先级来说，config[1] > config[0]

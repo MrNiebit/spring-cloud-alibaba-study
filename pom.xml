@@ -24,6 +24,7 @@
         <module>nacos-config/nacos-config-client-9003</module>
         <module>nacos-config/nacos-config-namespace-9004</module>
         <module>nacos-config/nacos-config-cluster-9005</module>
+        <module>nacos-config/nacos-config-shared-configs-9006</module>
     </modules>
 
     <properties>
